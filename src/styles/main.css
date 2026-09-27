@@ -201,6 +201,11 @@ textarea {
   font-weight: 600;
 }
 
+/* 存储写入失败时顶部有常驻提示条，标题栏不再吸顶以免遮挡 */
+.storage-failed .topbar {
+  position: static;
+}
+
 .content {
   padding: 24px 28px;
   max-width: 1200px;

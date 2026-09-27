@@ -2,6 +2,8 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTravelStore } from './stores/travel'
+import { storageStatus } from './services/storageStatus'
+import StorageAlert from './components/common/StorageAlert.vue'
 
 const route = useRoute()
 const store = useTravelStore()
@@ -16,10 +18,11 @@ const navItems = [
 
 const unlockedCount = computed(() => store.achievements.filter((a) => a.unlocked).length)
 const totalTrips = computed(() => store.plans.length)
+const storageFailed = computed(() => storageStatus.state === 'failed')
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :class="{ 'storage-failed': storageFailed }">
     <aside class="sidebar">
       <div class="brand">
         <span class="brand-logo">旅</span>
@@ -54,6 +57,7 @@ const totalTrips = computed(() => store.plans.length)
     </aside>
 
     <main class="main">
+      <StorageAlert />
       <header class="topbar">
         <h1 class="page-title">{{ route.meta.title || '出行看板' }}</h1>
       </header>

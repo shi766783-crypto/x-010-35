@@ -29,6 +29,11 @@ const form = reactive({
 })
 
 const errors = ref({})
+const saveFailed = ref(false)
+
+function exportBackup() {
+  store.exportBackup()
+}
 
 if (isEdit.value && planId.value) {
   const plan = store.planById(planId.value)
@@ -80,19 +85,37 @@ function submit() {
     photo: form.photo,
   }
 
-  if (isEdit.value) {
-    store.updatePlan(planId.value, payload)
-    router.push(`/plans/${planId.value}`)
-  } else {
-    const id = store.createPlan(payload)
-    router.push(`/plans/${id}`)
+  // $subscribe 已会自动保存；这里再显式 persist 一次以拿到即时结果（重复一次写入，开销可忽略）
+  const targetId = isEdit.value
+    ? planId.value
+    : store.createPlan(payload)
+  if (isEdit.value) store.updatePlan(planId.value, payload)
+
+  if (!store.persist()) {
+    // 未写入成功：留在当前页并明确提示，内存中的表单/数据不丢失
+    saveFailed.value = true
+    window.scrollTo({ top: 0 })
+    return
   }
+
+  saveFailed.value = false
+  router.push(`/plans/${targetId}`)
 }
 </script>
 
 <template>
   <div class="card" style="max-width: 720px">
     <h2 class="card-title">{{ isEdit ? '编辑出行计划' : '新建出行计划' }}</h2>
+
+    <div v-if="saveFailed" class="save-alert" role="alert">
+      <div>
+        <strong>⚠️ 保存失败：</strong>浏览器本地存储空间可能已满，刚才的内容未写入。
+        你填写的内容仍保留在页面上，可继续编辑，或先导出备份后清理存储空间再试。
+      </div>
+      <div class="save-alert-actions">
+        <button type="button" class="btn btn-sm btn-ghost" @click="exportBackup">导出备份</button>
+      </div>
+    </div>
 
     <div class="form-row">
       <div class="form-group">
@@ -179,5 +202,23 @@ function submit() {
 .form-error {
   color: var(--danger);
   font-size: 12px;
+}
+
+.save-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: var(--danger-light);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.save-alert-actions {
+  flex-shrink: 0;
 }
 </style>

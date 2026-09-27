@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { planStorage } from '../services/storage'
+import { reportWriteResult } from '../services/storageStatus'
+import { exportPlansBackup, estimatePlansSize } from '../services/backup'
 import { generateLuggageTemplate, getDestinationType } from '../services/luggage'
 import { generateDefaultTodos } from '../services/todo'
 import { computeAchievements, TOTAL_ACHIEVEMENTS } from '../services/achievements'
@@ -25,6 +27,8 @@ export const useTravelStore = defineStore('travel', {
     dashboardStats: (state) => computeDashboardStats(state.plans),
     leaderboard: (state) => computeMemberLeaderboard(state.plans),
     planById: (state) => (id) => state.plans.find((p) => p.id === id),
+    // 当前内存数据占用的估算字节数（用于提示与清理参考）
+    storageBytes: (state) => estimatePlansSize(state.plans),
   },
 
   actions: {
@@ -32,8 +36,17 @@ export const useTravelStore = defineStore('travel', {
     load() {
       this.plans = planStorage.read([])
     },
+    // 写入 localStorage 并上报结果。返回是否成功，供调用方即时反馈。
     persist() {
-      planStorage.write(this.plans)
+      return reportWriteResult(planStorage.write(this.plans))
+    },
+    // 存储失败后重试（用户清理完空间后调用）
+    retryPersist() {
+      return this.persist()
+    },
+    // 导出当前内存中的全部数据备份（存储写满时也可使用）
+    exportBackup() {
+      exportPlansBackup(this.plans)
     },
 
     // ===== 出行计划 =====
