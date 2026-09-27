@@ -33,7 +33,13 @@ export const useTravelStore = defineStore('travel', {
       this.plans = planStorage.read([])
     },
     persist() {
-      planStorage.write(this.plans)
+      // 返回写入结果，由 main.js 据此更新全局保存状态
+      return planStorage.write(this.plans)
+    },
+
+    // 用备份文件的内容整体替换当前数据（导入恢复）
+    replaceAll(plans) {
+      this.plans = plans
     },
 
     // ===== 出行计划 =====

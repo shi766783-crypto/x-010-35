@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTravelStore } from './stores/travel'
+import SaveGuard from './components/common/SaveGuard.vue'
 
 const route = useRoute()
 const store = useTravelStore()
@@ -61,5 +62,8 @@ const totalTrips = computed(() => store.plans.length)
         <router-view />
       </div>
     </main>
+
+    <!-- 持久化失败提示与备份入口 -->
+    <SaveGuard />
   </div>
 </template>
